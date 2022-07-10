@@ -1,0 +1,36 @@
+#!/usr/bin/bash
+
+if [ $USER != "root" ]; then
+	echo "This script must be run as root --> 'sudo -s'"
+	exit 1
+fi
+
+# Variables
+INSTALL_PKGS="apache2 php7.4-fpm mariadb-server mariadb-client php7.4-mysql git jq"
+APACHE_MODS="headers proxy_fcgi rewrite ssl"
+
+JS="/root/ffdl-jumpstart"
+
+echo "Installing application packages from Debian/RasperryOS repositories..."
+
+apt update -y
+apt install -y $INSTALL_PKGS
+
+# Git Repo Pull for Jumpstart
+echo "Cloning ffdl-jumpstart for installation services..."
+cd /root
+git clone https://github.com/jxmx/ffdl-jumpstart.git
+
+# Apache Configuration
+a2enmod $APACHE_MODS
+cp $JS/apache2/default-ssl.conf $JS/apache2/000-default.conf /etc/apache2/sites-available
+a2ensite default-ssl
+systemctl enable apache2
+systemctl restart apache2
+
+# MariaDB Configuration
+mysql -u root <<EOF
+create database ffdl;
+use ffdl;
+grant all on ffdl.* to ffdl@localhost identified by 'ffdl';
+EOF
