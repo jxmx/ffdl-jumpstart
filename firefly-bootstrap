@@ -1,7 +1,20 @@
 #!/usr/bin/bash
 
+set PATH=/usr/bin:/usr/sbin:/bin:/sbin
+
 if [ $USER != "root" ]; then
 	echo "This script must be run as root --> 'sudo -s'"
+	exit 1
+fi
+
+if [ ! -f /etc/debian_version ]; then
+	echo "This script only works on Debian 11"
+	exit 1
+fi
+
+DV=`head -n1 /etc/debian_version | cut -c1-2`
+if [ x"$DV" != "x11" ]; then
+	echo "This script only works on Debian 11"
 	exit 1
 fi
 
@@ -34,3 +47,13 @@ create database ffdl;
 use ffdl;
 grant all on ffdl.* to ffdl@localhost identified by 'ffdl';
 EOF
+
+# FFDL Install
+FZ=`wget -q -O- https://api.github.com/repos/jxmx/ffdl/releases/latest | jq ".tarball_url" | sed 's/"//g'`
+wget -q -O /root/ffdl.tar.gz $FZ
+tar xvfz /root/ffdl.tar.gz --strip-components=1 -C /var/www/html
+mysql -u root ffdl < /var/www/html/load.sql
+
+# Cleanup
+rm -f /root/ffdl.tar.gz
+rm -rf /root/ffdl-jumpstart
