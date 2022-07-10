@@ -19,7 +19,7 @@ if [ x"$DV" != "x11" ]; then
 fi
 
 # Variables
-INSTALL_PKGS="apache2 php7.4-fpm mariadb-server mariadb-client php7.4-mysql git jq"
+INSTALL_PKGS="apache2 php7.4-fpm mariadb-server mariadb-client php7.4-mysql git jq avahi-daemon"
 APACHE_MODS="headers proxy_fcgi rewrite ssl"
 
 JS="/root/ffdl-jumpstart"
@@ -53,6 +53,10 @@ FZ=`wget -q -O- https://api.github.com/repos/jxmx/ffdl/releases/latest | jq ".ta
 wget -q -O /root/ffdl.tar.gz $FZ
 tar xvfz /root/ffdl.tar.gz --strip-components=1 -C /var/www/html
 mysql -u root ffdl < /var/www/html/load.sql
+
+# MDNS
+systemctl enable avahi-daemon
+systemctl restart avahi-daemon
 
 # Cleanup
 rm -f /root/ffdl.tar.gz
